@@ -10,3 +10,4 @@ python3 -m pip install keyboard
 
 ## 使用方法
 
+修改 main 函数使用对应的快捷键

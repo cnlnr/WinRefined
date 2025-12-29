@@ -5,7 +5,7 @@
 ## 安装依赖
 
 ```shell
-python3 -m pip install keyboard
+python3 -m pip install pynput
 ```
 
 ## 使用方法

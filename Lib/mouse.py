@@ -93,8 +93,5 @@ if __name__ == '__main__':
             tracker.bzjkqy()
             print("游标离开监控区域")
 
-
-            
-
     except KeyboardInterrupt:
         print("\n监控已停止")

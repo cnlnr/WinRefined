@@ -11,7 +11,6 @@ import time
 # ==================== 常量定义 ====================
 
 # 键盘事件标志
-KEYEVENTF_EXTENDEDKEY = 0x0001
 KEYEVENTF_KEYUP = 0x0002
 
 # 常用虚拟键码映射
@@ -43,6 +42,15 @@ VK_CODE = {
     # 符号键
     ';': 0xBA, '=': 0xBB, ',': 0xBC, '-': 0xBD, '.': 0xBE,
     '/': 0xBF, '`': 0xC0, '[': 0xDB, '\\': 0xDC, ']': 0xDD, "'": 0xDE,
+}
+
+# 需要Shift组合的符号映射
+SHIFT_SYMBOLS = {
+    '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+    '^': '6', '&': '7', '*': '8', '(': '9', ')': '0',
+    '_': '-', '+': '=', '{': '[', '}': ']', '|': '\\',
+    ':': ';', '"': "'", '<': ',', '>': '.', '?': '/',
+    '~': '`'
 }
 
 # 修饰键集合
@@ -153,10 +161,14 @@ def write(text: str, interval: float = 0):
     for char in text:
         if char.isupper():
             hotkey('shift', char.lower())
-        elif char in VK_CODE:
-            tap(char, delay=0)
+        elif char in SHIFT_SYMBOLS:
+            hotkey('shift', SHIFT_SYMBOLS[char])
+        elif char == ' ':
+            tap('space', delay=0)
+        elif char.lower() in VK_CODE:
+            tap(char.lower(), delay=0)
         else:
-            raise ValueError(f"无法直接输入字符: {char}")
+            raise ValueError(f"无法直接输入字符: {char!r}")
         
         if interval > 0:
             time.sleep(interval)
@@ -174,14 +186,24 @@ if __name__ == "__main__":
     # 输入记事本并回车
     write("notepad")
     tap('enter')
+    time.sleep(1)
     tap('enter')
     time.sleep(2)
 
     # 输入Hello（自动处理大写）
     write("Hello", interval=0.1)
     tap('enter')
+    tap('enter')
+
+    time.sleep(1)
+
+    # 测试符号键
+    write("Shift+1 = !", interval=0.1)
+    tap('enter')
+    tap('f5')
 
     time.sleep(1)
 
     # 全选
     hotkey('ctrl', 'a')
+    time.sleep(1)

@@ -1,4 +1,4 @@
-# 从lib.py导入mouse和key模块，通过lib.py的路径配置解决导入问题
+# 将鼠标移至左上角触发 Win + 1 按键，可以配合 AI 使用
 from lib import *
 
 tracker = mouse.MouseTracker()

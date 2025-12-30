@@ -6,7 +6,6 @@ import time
 # 加载Windows API
 user32 = ctypes.windll.user32
 
-# 定义结构体
 class POINT(ctypes.Structure):
     _fields_ = [("x", wintypes.LONG), ("y", wintypes.LONG)]
 
@@ -15,77 +14,87 @@ class RECT(ctypes.Structure):
                 ("right", wintypes.LONG), ("bottom", wintypes.LONG)]
 
 class MouseTracker:
-    """极简鼠标追踪器"""
+    """极简鼠标追踪器 - 状态驱动"""
     
-    def __init__(self):
-        self.areas = []  # 只存区域和回调
+    def __init__(self, check_interval=0.05):
+        self.areas = []
+        self.check_interval = check_interval
     
     def get_pos(self):
-        """获取当前鼠标位置（单位：像素）"""
         pt = POINT()
         user32.GetCursorPos(ctypes.byref(pt))
         return pt.x, pt.y
     
-    def add_area(self, rect, on_enter, on_leave):
-        """添加监控区域
-        rect: (x1, y1, x2, y2) 矩形坐标
-        on_enter: 进入区域的函数
-        on_leave: 离开区域的函数
-        """
-        self.areas.append({
+    @property
+    def zb(self):
+        if self.areas:
+            r = self.areas[0]['rect']
+            return (r.left, r.top, r.right, r.bottom)
+        return None
+    
+    @zb.setter
+    def zb(self, rect):
+        """设置监控区域 (x1, y1, x2, y2)"""
+        self.areas = [{
             'rect': RECT(*rect),
-            'enter': on_enter,
-            'leave': on_leave,
-            'inside': False  # 记录当前状态
-        })
+            'inside': False  # 无需初始化，每次调用独立判断
+        }]
     
-    def check_areas(self, x, y):
-        """检查坐标是否触发区域事件"""
-        for area in self.areas:
-            # 判断点是否在矩形内
-            inside = (area['rect'].left <= x <= area['rect'].right and
-                     area['rect'].top <= y <= area['rect'].bottom)
+    def zjkqy(self):
+        """**阻塞直到鼠标在监控区域内**（已在里面则立即返回）"""
+        if not self.areas:
+            return
+        
+        rect = self.areas[0]['rect']
+        
+        while True:
+            x, y = self.get_pos()
+            inside = (rect.left <= x <= rect.right and 
+                     rect.top <= y <= rect.bottom)
             
-            # 状态变化才触发回调
-            if inside and not area['inside']:
-                area['inside'] = True
-                if area['enter']:
-                    area['enter'](x, y)
-            elif not inside and area['inside']:
-                area['inside'] = False
-                if area['leave']:
-                    area['leave'](x, y)
+            # 已在区域内 → 立即返回
+            if inside:
+                return
+            
+            time.sleep(self.check_interval)
+    
+    def bzjkqy(self):
+        """**阻塞直到鼠标在监控区域外**（已在外面则立即返回）"""
+        if not self.areas:
+            return
+        
+        rect = self.areas[0]['rect']
+        
+        while True:
+            x, y = self.get_pos()
+            inside = (rect.left <= x <= rect.right and 
+                     rect.top <= y <= rect.bottom)
+            
+            # 已在区域外 → 立即返回
+            if not inside:
+                return
+            
+            time.sleep(self.check_interval)
 
 
-# ==================== 用法示例 ====================
+# ==================== 正确用法 ====================
 if __name__ == '__main__':
-    def on_enter(x, y):
-        print(f"🔥 进入区域！坐标: ({x}, {y})")
+    tracker = MouseTracker(check_interval=0.05)
+    tracker.zb = (0, 0, 1, 1)
     
-    def on_leave(x, y):
-        print(f"👋 离开区域！坐标: ({x}, {y})")
-    
-    # 创建追踪器
-    tracker = MouseTracker()
-    
-    # 添加一个监控区域（左上角）
-    tracker.add_area((0, 0, 1, 1), on_enter, on_leave)
-    
-    # 用户自己控制循环
     print("开始监控，按 Ctrl+C 退出")
     try:
         while True:
-            # 获取鼠标位置
-            x, y = tracker.get_pos()
+            # 阻塞直到"在里面"
+            tracker.zjkqy()
+            print("游标进入监控区域")
             
-            # 检查区域事件
-            tracker.check_areas(x, y)
+            # 阻塞直到"在外面"
+            tracker.bzjkqy()
+            print("游标离开监控区域")
+
+
             
-            # ✅ 用户自己的代码可以放在这里
-            # print(f"当前位置: ({x}, {y})")
-            # if x > 1000:
-            #     do_something_else()
-            
-            time.sleep(0.05)  # 控制刷新频率
+
     except KeyboardInterrupt:
         print("\n监控已停止")

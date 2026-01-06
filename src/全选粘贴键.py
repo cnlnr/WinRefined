@@ -1,3 +1,8 @@
+"""
+全选粘贴键
+将Insert键映射为Ctrl+A和Ctrl+V，实现全选粘贴功能
+作用是可以快速全选并粘贴代码
+"""
 import keyboard
 import time
 

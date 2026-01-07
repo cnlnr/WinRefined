@@ -1,5 +1,7 @@
 """
 将鼠标移动到左上角区域时，触发相应的操作，如模拟按下 Win+Tab
+按住Ctrl键时，启动任务管理器
+按住alt切换应用
 """
 from pynput import mouse
 import keyboard
@@ -13,9 +15,9 @@ def caozuo():
 
 
     if keyboard.is_pressed('ctrl'):
-        # 打开或关闭任务栏第一个应用，试试放ai应用
-        keyboard.press_and_release('alt + tab')
-
+        keyboard.press_and_release('shift + esc')
+    elif keyboard.is_pressed('alt'):
+        keyboard.press_and_release('tab + ')
     else:
         keyboard.press_and_release('win + tab')
         

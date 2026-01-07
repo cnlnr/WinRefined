@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Windows-optimization"
+version = "0.0.1"  # 版本号必须存在，可以随便写
+
+[tool.setuptools.packages.find]
+where = ["src/lib"]

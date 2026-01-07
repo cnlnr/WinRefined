@@ -16,11 +16,9 @@ def caozuo():
 
     if keyboard.is_pressed('ctrl'):
         keyboard.press_and_release('shift + esc')
-    elif keyboard.is_pressed('alt'):
-        keyboard.press_and_release('tab + ')
     else:
         keyboard.press_and_release('win + tab')
-        
+
 
 
 

@@ -5,6 +5,10 @@
 """
 from 区域检测 import shubiao_in_quyu
 import keyboard
+import win32com.client
+
+# 启动任务视图
+shell = win32com.client.Dispatch("Shell.Application")
 
 
 while True:
@@ -12,7 +16,7 @@ while True:
         if keyboard.is_pressed('ctrl'):
             keyboard.press_and_release('shift + esc')
         else:
-            keyboard.press_and_release('win + tab')
+            shell.WindowSwitcher()
 
 
 

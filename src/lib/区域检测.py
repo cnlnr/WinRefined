@@ -1,9 +1,34 @@
-from pynput import mouse
+import ctypes
+from ctypes import wintypes
 import time
+
+# 导入Windows API函数
+user32 = ctypes.windll.user32
+
+
+def get_mouse_pos():
+    """
+    使用Windows API获取当前鼠标位置
+    
+    返回：(x, y) 坐标元组
+    """
+    point = ctypes.wintypes.POINT()
+    # GetCursorPos返回BOOL值，True表示成功
+    if user32.GetCursorPos(ctypes.byref(point)):
+        return point.x, point.y
+    else:
+        # 如果获取失败，返回上次已知位置或默认值
+        if hasattr(get_mouse_pos, "_last_pos"):
+            return get_mouse_pos._last_pos
+        return (0, 0)
+
+# 初始化上次已知位置
+get_mouse_pos._last_pos = (0, 0)
+
 
 def shubiao_in_quyu(x1, y1, x2, y2):
     """
-    阻塞式区域检测（纯函数语法，内部记忆状态）
+    阻塞式区域检测（使用Windows API，提高可靠性）
     
     首次调用返回当前状态，之后阻塞直到状态变化
     """
@@ -14,7 +39,6 @@ def shubiao_in_quyu(x1, y1, x2, y2):
             'x_max': max(x1, x2),
             'y_min': min(y1, y2),
             'y_max': max(y1, y2),
-            'mouse': mouse.Controller(),
             'last': None
         }
     
@@ -22,14 +46,18 @@ def shubiao_in_quyu(x1, y1, x2, y2):
     
     # 首次调用：立即返回当前状态
     if cfg['last'] is None:
-        x, y = cfg['mouse'].position
+        x, y = get_mouse_pos()
+        # 更新上次已知位置
+        get_mouse_pos._last_pos = (x, y)
         cfg['last'] = cfg['x_min'] <= x <= cfg['x_max'] and cfg['y_min'] <= y <= cfg['y_max']
         return cfg['last']
     
     # 持续监测直到状态变化
     while True:
         time.sleep(0.1)
-        x, y = cfg['mouse'].position
+        x, y = get_mouse_pos()
+        # 更新上次已知位置
+        get_mouse_pos._last_pos = (x, y)
         current = cfg['x_min'] <= x <= cfg['x_max'] and cfg['y_min'] <= y <= cfg['y_max']
         
         if current != cfg['last']:

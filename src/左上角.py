@@ -20,15 +20,7 @@ while True:
         else:
             shell.WindowSwitcher()
 
+        # 打开或关闭任务栏第一个应用，试试放ai应用，使用需要将上一行代码注释掉
+        # keyboard.press_and_release('win + 1')
 
-
-
-# 打开或关闭任务栏第一个应用，试试放ai应用
-# keyboard.press_and_release('win + 1')
-
-# 打开或关闭任务视图
-# keyboard.press_and_release('win + t')
-
-# 打开或关闭任务管理器
-# keyboard.press_and_release('ctrl + shift + esc')
 

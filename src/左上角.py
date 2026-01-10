@@ -15,6 +15,8 @@ while True:
     if shubiao_in_quyu(0, 0, 10, 10):
         if keyboard.is_pressed('ctrl'):
             keyboard.press_and_release('shift + esc')
+        if keyboard.is_pressed('alt'):
+            keyboard.press_and_release('tab')
         else:
             shell.WindowSwitcher()
 

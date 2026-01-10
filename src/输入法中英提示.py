@@ -1,5 +1,1 @@
-import win32com.client
-
-shell = win32com.client.Dispatch("Shell.Application")
-# 这个方法在某些Windows版本上可用
-shell.WindowSwitcher()
+# 无法检测输入法是中文还是英文，无法进行代码

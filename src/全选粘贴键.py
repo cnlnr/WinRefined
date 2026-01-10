@@ -11,7 +11,7 @@ def send_ctrl_a():
     keyboard.send('ctrl+a+v')
     # keyboard.send('ctrl+s')
 
-# 注册热键：将Insert映射为Ctrl+A，并抑制原始按键
+# 注册热键：将Insert映射为Ctrl+A+V，并抑制原始按键
 keyboard.add_hotkey('insert', send_ctrl_a, suppress=True)
 
 print("Insert键重映射已启动")

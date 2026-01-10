@@ -54,7 +54,7 @@ def shubiao_in_quyu(x1, y1, x2, y2):
     
     # 持续监测直到状态变化
     while True:
-        time.sleep(0.1)
+        time.sleep(0.01)
         x, y = get_mouse_pos()
         # 更新上次已知位置
         get_mouse_pos._last_pos = (x, y)

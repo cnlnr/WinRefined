@@ -14,9 +14,9 @@ while True:
         elif keyboard.is_pressed('alt'):
             keyboard.press_and_release('tab')
         else:
-            keyboard.press_and_release('win + tab')
+            keyboard.press_and_release('win + 1')
 
-            # 打开或关闭任务栏第一个应用，试试放ai应用，使用需要将上一行代码注释掉
-            # keyboard.press_and_release('win + 1')
+            # 模拟gnome（win + tab）打开任务视图
+            # keyboard.press_and_release('win + tab')
 
 

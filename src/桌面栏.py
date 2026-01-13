@@ -1,25 +1,140 @@
-# appbar_top_demo.py
 import sys
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QFrame
+from PySide6.QtCore import Qt, QEvent
 from appbar import DebugAppBarLeft, ABEdge
 
-def main():
-    print("=" * 70)
-    print("AppBar 顶部注册示例")
-    print("=" * 70)
+# 纯函数结构 不变 + 完美宽度自适应UI（核心优化版）
+def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
+    # 处理默认按钮文本
+    if button_texts is None:
+        button_texts = ["桌面1", "桌面2", "桌面3"]
     
-    app = QApplication(sys.argv)
-    
-    # 创建顶部应用栏
-    window = DebugAppBarLeft(edge=ABEdge.TOP)
-    
-    # 测试坐标转换方法
-    print(f"📊 逻辑高度 40px → 物理高度: {window.logical_to_physical(40)}px")
-    print(f"📊 物理高度 80px → 逻辑高度: {window.physical_to_logical(80)}px")
-    
-    window.show()
-    
-    sys.exit(app.exec())
+    # 创建根控件
+    app_bar = DebugAppBarLeft(edge=edge)
 
+    # ========== 1. 创建所有UI控件 ==========
+    # 标题【内部测试】- 核心适配目标1
+    title_label = QLabel("内部测试", app_bar)
+    title_label.setAlignment(Qt.AlignCenter) # 居中不变
+    
+    # 下划线分割线
+    line = QFrame(app_bar)
+    line.setFrameShape(QFrame.HLine)
+    line.setFrameShadow(QFrame.Plain)
+    
+    # 按钮列表 + 点击事件
+    buttons = []
+    def on_button_clicked(text):
+        print(f"按钮被点击：{text}")
+    
+    for text in button_texts:
+        btn = QPushButton(text, app_bar)
+        btn.clicked.connect(lambda checked, t=text: on_button_clicked(t))
+        buttons.append(btn)
+
+    # ========== 2. 布局设置 ==========
+    def setup_layout():
+        # 清除旧布局
+        if app_bar.layout():
+            while app_bar.layout().count():
+                child = app_bar.layout().takeAt(0)
+                if child.widget():
+                    child.widget().setParent(None)
+            QWidget().setLayout(app_bar.layout())
+        
+        # 主布局 无边距无间距 紧凑贴合侧边栏
+        main_layout = QVBoxLayout(app_bar)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # 标题容器
+        title_container = QWidget(app_bar)
+        title_layout = QVBoxLayout(title_container)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(0)
+        title_layout.addWidget(title_label)
+        title_layout.addWidget(line)
+        main_layout.addWidget(title_container)
+        
+        # 添加所有按钮
+        for btn in buttons:
+            main_layout.addWidget(btn)
+        
+        main_layout.addStretch()
+
+    # ========== 3. 核心【完美自适应】样式更新函数 【全部重写优化】 ==========
+    def update_dynamic_styles():
+        """所有UI元素 完全根据侧边栏宽度 自动等比调整大小"""
+        bar_width = app_bar.width()  # 获取当前侧边栏的宽度
+        
+        # ===== 【所有尺寸都基于宽度动态计算，无固定值，核心！】 =====
+        # 标题相关 自适应配置（内部测试）
+        title_font_size = max(8, int(bar_width * 0.18))  # 标题字号：宽度占比18%，最小8px
+        title_padding = max(4, int(bar_width * 0.06))     # 标题内边距：宽度占比6%，最小4px
+        title_min_height = max(20, int(bar_width * 0.25)) # 标题栏高度：宽度占比25%，最小20px
+        
+        # 分割线下划线 自适应配置
+        line_height = max(2, int(bar_width * 0.03))       # 分割线粗细：宽度占比3%，最小2px
+        
+        # 按钮相关 自适应配置（核心适配目标2）
+        btn_font_size = max(7, int(bar_width * 0.3))     # 按钮字号：宽度占比15%，最小7px
+        btn_padding_left = max(6, int(bar_width * 0.1))  # 按钮文字左内边距：宽度占比8%，最小6px
+        btn_min_height = max(25, int(bar_width * 0.80))   # 按钮高度：宽度占比22%，最小25px
+
+        # 更新标题样式 + 自适应
+        title_label.setStyleSheet(f"""
+            QLabel {{
+                color: white;
+                font-size: {title_font_size}px;
+                font-weight: bold;
+                padding: {title_padding}px; /* 上下左右都有内边距，跟随宽度缩放 */
+            }}
+        """)
+        title_label.setMinimumHeight(title_min_height)
+
+        # 更新分割线样式 + 自适应粗细 + 修复颜色不生效bug
+        line.setFixedHeight(line_height)
+        line.setStyleSheet(f"QFrame {{ border-top: {line_height}px solid white; }}")
+
+        # 更新按钮样式 + 全维度自适应
+        for btn in buttons:
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: #2d2d30;
+                    color: white;
+                    border: none;
+                    font-size: {btn_font_size}px;
+                    text-align: left;
+                    padding-left: {btn_padding_left}px; /* 按钮内边距跟随宽度缩放 */
+                }}
+                QPushButton:hover {{
+                    background-color: #3e3e42;
+                    border-left: 2px solid #ffffff; /* 悬浮加左侧白线，更美观 */
+                }}
+                QPushButton:pressed {{
+                    background-color: #4f4f54; /* 点击按下加深，体验更好 */
+                }}
+            """)
+            btn.setMinimumHeight(btn_min_height)
+
+    # ========== 4. 监听尺寸变化，实时自适应 ==========
+    def event_filter(watched, event):
+        if watched == app_bar and event.type() == QEvent.Resize:
+            update_dynamic_styles()  # 宽度一变，立刻更新所有样式尺寸
+        return DebugAppBarLeft.eventFilter(app_bar, watched, event)
+    
+    app_bar.installEventFilter(app_bar)
+    app_bar.eventFilter = event_filter
+
+    # ========== 初始化 ==========
+    setup_layout()
+    update_dynamic_styles()
+    
+    return app_bar
+
+# 主程序运行
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    window = create_appbar_button_list(edge=ABEdge.LEFT, button_texts=["桌面1", "桌面2", "桌面3"])
+    window.show()
+    sys.exit(app.exec())

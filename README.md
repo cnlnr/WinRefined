@@ -2,6 +2,8 @@
 
 此项目专门用于 Windows 系统的优化
 
+项目还在完善中
+
 请克隆此项目到本地：
 ```shell
 git clone https://gitee.com/LZY4/Windows-optimization.git

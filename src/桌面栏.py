@@ -168,6 +168,6 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
 # 主程序运行
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = create_appbar_button_list(edge=ABEdge.LEFT, button_texts=["桌面1", "桌面2", "桌面3"])
+    window = create_appbar_button_list(edge=ABEdge.LEFT, button_texts=["AI", "Work", "Edge","Docs"])
     window.show()
     sys.exit(app.exec())

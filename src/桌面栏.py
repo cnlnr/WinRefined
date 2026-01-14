@@ -6,6 +6,22 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushB
 from PySide6.QtCore import Qt, QEvent
 from appbar import DebugAppBarLeft, ABEdge
 
+# ====================== 新增：核心兼容函数【唯一新增的代码段】 ======================
+def get_application_root_path():
+    """
+    获取程序运行的根目录，完美兼容：
+    1. 开发模式：直接运行py脚本时，返回 当前py文件的上级目录 (和你原代码的parent.parent一致)
+    2. 打包模式：运行exe时，返回 PyInstaller解压的临时目录根路径
+    """
+    if hasattr(sys, '_MEIPASS'):
+        # 打包成exe后运行的环境
+        base_path = Path(sys._MEIPASS)
+    else:
+        # 本地开发运行py脚本的环境，和你原代码的parent.parent完全一致
+        base_path = Path(__file__).parent.parent
+    return base_path
+# ==================================================================================
+
 # 纯函数结构 不变 + 完美宽度自适应UI（核心优化版）
 def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
     # 处理默认按钮文本
@@ -15,19 +31,20 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
     # 创建根控件
     app_bar = DebugAppBarLeft(edge=edge)
 
-    # ========== 新增：桌面切换核心函数 - 仅新增，无修改其他内容 ==========
+    # ========== 修改：仅修改这里的路径获取方式，其余逻辑完全不变 ==========
     def switch_desktop(desktop_num):
         """调用指定工具切换桌面，禁用动画，桌面编号对应 /Switch:数字"""
-        # 工具绝对路径：上级目录的bin文件夹下的VirtualDesktop11-24H2.exe
-        tool_path = str(Path(__file__).parent.parent / "bin" / "VirtualDesktop11-24H2.exe")
-        # 严格按照你的示例命令：禁用动画 + 切换指定桌面
+        # 工具绝对路径：调用上面的兼容函数获取根目录，再拼接bin文件夹和exe，和原逻辑一致
+        root_path = get_application_root_path()
+        tool_path = str(root_path / "bin" / "VirtualDesktop11-24H2.exe")
+        # 严格按照你的示例命令：禁用动画 + 切换指定桌面 
         cmd = [tool_path, "/Animation:Off", f"/Switch:{desktop_num}"]
         # 静默执行命令，不弹窗黑框、不阻塞UI
         subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
 
     # ========== 1. 创建所有UI控件 ==========
-    # 标题【内部测试】- 核心适配目标1
-    title_label = QLabel("内部测试", app_bar)
+    # 标题- 核心适配目标1
+    title_label = QLabel("Desktops", app_bar)
     title_label.setAlignment(Qt.AlignCenter) # 居中不变
     
     # 下划线分割线
@@ -46,7 +63,7 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
         # 设置当前悬停按钮为选中状态
         hovered_button.setChecked(True)
         
-        # ========== 新增：核心切换逻辑 ==========
+        # ========== 核心切换逻辑 ==========
         # 按钮索引 = 桌面编号 （桌面1=索引0 → /Switch:0，桌面2=索引1 → /Switch:1，完全对应）
         desktop_index = buttons.index(hovered_button)
         switch_desktop(desktop_index)
@@ -89,12 +106,12 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
         
         main_layout.addStretch()
 
-    # ========== 3. 核心【完美自适应】样式更新函数 【全部重写优化】 ==========
+    # ========== 3. 核心样式更新函数 ==========
     def update_dynamic_styles():
         """所有UI元素 完全根据侧边栏宽度 自动等比调整大小"""
         bar_width = app_bar.width()  # 获取当前侧边栏的宽度
         
-        # ===== 【所有尺寸都基于宽度动态计算，无固定值，核心！】 =====
+        # ===== 所有尺寸都基于宽度动态计算，无固定值，核心！ =====
         # 标题相关 自适应配置（内部测试）
         title_font_size = max(8, int(bar_width * 0.18))  # 标题字号：宽度占比18%，最小8px
         title_padding = max(4, int(bar_width * 0.06))     # 标题内边距：宽度占比6%，最小4px
@@ -168,6 +185,6 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
 # 主程序运行
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = create_appbar_button_list(edge=ABEdge.LEFT, button_texts=["AI", "Work", "Edge","Docs"])
+    window = create_appbar_button_list(edge=ABEdge.LEFT, button_texts=["AI", "Code", "Edge","Docs"])
     window.show()
     sys.exit(app.exec())

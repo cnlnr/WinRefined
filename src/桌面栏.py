@@ -1,4 +1,7 @@
 import sys
+import subprocess
+import os
+from pathlib import Path
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QFrame
 from PySide6.QtCore import Qt, QEvent
 from appbar import DebugAppBarLeft, ABEdge
@@ -11,6 +14,16 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
     
     # 创建根控件
     app_bar = DebugAppBarLeft(edge=edge)
+
+    # ========== 新增：桌面切换核心函数 - 仅新增，无修改其他内容 ==========
+    def switch_desktop(desktop_num):
+        """调用指定工具切换桌面，禁用动画，桌面编号对应 /Switch:数字"""
+        # 工具绝对路径：上级目录的bin文件夹下的VirtualDesktop11-24H2.exe
+        tool_path = str(Path(__file__).parent.parent / "bin" / "VirtualDesktop11-24H2.exe")
+        # 严格按照你的示例命令：禁用动画 + 切换指定桌面
+        cmd = [tool_path, "/Animation:Off", f"/Switch:{desktop_num}"]
+        # 静默执行命令，不弹窗黑框、不阻塞UI
+        subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
 
     # ========== 1. 创建所有UI控件 ==========
     # 标题【内部测试】- 核心适配目标1
@@ -26,12 +39,17 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
     buttons = []
 
     def on_button_hovered(hovered_button):
-        """处理按钮悬停时的高亮效果"""
+        """处理按钮悬停时的高亮效果 + 新增：悬停切换对应桌面"""
         # 取消所有按钮的高亮状态
         for btn in buttons:
             btn.setChecked(False)
         # 设置当前悬停按钮为选中状态
         hovered_button.setChecked(True)
+        
+        # ========== 新增：核心切换逻辑 ==========
+        # 按钮索引 = 桌面编号 （桌面1=索引0 → /Switch:0，桌面2=索引1 → /Switch:1，完全对应）
+        desktop_index = buttons.index(hovered_button)
+        switch_desktop(desktop_index)
 
     for text in button_texts:
         btn = QPushButton(text, app_bar)

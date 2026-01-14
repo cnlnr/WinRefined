@@ -22,14 +22,23 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
     line.setFrameShape(QFrame.HLine)
     line.setFrameShadow(QFrame.Plain)
     
-    # 按钮列表 + 点击事件
+    # 按钮列表
     buttons = []
-    def on_button_clicked(text):
-        print(f"按钮被点击：{text}")
-    
+
+    def on_button_hovered(hovered_button):
+        """处理按钮悬停时的高亮效果"""
+        # 取消所有按钮的高亮状态
+        for btn in buttons:
+            btn.setChecked(False)
+        # 设置当前悬停按钮为选中状态
+        hovered_button.setChecked(True)
+
     for text in button_texts:
         btn = QPushButton(text, app_bar)
-        btn.clicked.connect(lambda checked, t=text: on_button_clicked(t))
+        btn.setCheckable(True)  # 设置按钮为可选择的
+        # 设置按钮悬停事件
+        btn.installEventFilter(app_bar)  # 为每个按钮安装事件过滤器
+        btn.setAttribute(Qt.WA_Hover)  # 启用按钮的悬停事件
         buttons.append(btn)
 
     # ========== 2. 布局设置 ==========
@@ -114,11 +123,17 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
                 QPushButton:pressed {{
                     background-color: #4f4f54; /* 点击按下加深，体验更好 */
                 }}
+                QPushButton:checked {{
+                    background-color: #3e3e42; /* 按钮选中后保持高亮 */
+                }}
             """)
             btn.setMinimumHeight(btn_min_height)
 
     # ========== 4. 监听尺寸变化，实时自适应 ==========
     def event_filter(watched, event):
+        if isinstance(watched, QPushButton):
+            if event.type() == QEvent.Enter:
+                on_button_hovered(watched)  # 鼠标悬停时触发按钮的高亮显示
         if watched == app_bar and event.type() == QEvent.Resize:
             update_dynamic_styles()  # 宽度一变，立刻更新所有样式尺寸
         return DebugAppBarLeft.eventFilter(app_bar, watched, event)

@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QFrame
 from PySide6.QtCore import Qt, QEvent
-from appbar import DebugAppBarLeft, ABEdge
+from appbar import DebugAppBar, ABEdge
+
 
 # ====================== 新增：核心兼容函数【唯一新增的代码段】 ======================
 def get_application_root_path():
@@ -29,7 +30,7 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
         button_texts = ["桌面1", "桌面2", "桌面3"]
     
     # 创建根控件
-    app_bar = DebugAppBarLeft(edge=edge)
+    app_bar = DebugAppBar(edge=edge)
 
     # ========== 修改：仅修改这里的路径获取方式，其余逻辑完全不变 ==========
     def switch_desktop(desktop_num):
@@ -171,7 +172,7 @@ def create_appbar_button_list(edge=ABEdge.LEFT, button_texts=None):
                 on_button_hovered(watched)  # 鼠标悬停时触发按钮的高亮显示
         if watched == app_bar and event.type() == QEvent.Resize:
             update_dynamic_styles()  # 宽度一变，立刻更新所有样式尺寸
-        return DebugAppBarLeft.eventFilter(app_bar, watched, event)
+        return DebugAppBar.eventFilter(app_bar, watched, event)
     
     app_bar.installEventFilter(app_bar)
     app_bar.eventFilter = event_filter

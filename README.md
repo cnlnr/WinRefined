@@ -4,6 +4,8 @@
 
 项目还在完善中
 
+正在寻找维护人员，请 Issues 联系我
+
 请克隆此项目到本地：
 ```shell
 git clone https://gitee.com/LZY4/Windows-optimization.git

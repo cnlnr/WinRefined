@@ -240,11 +240,37 @@ class DebugAppBar(QWidget):
         self.unregister_appbar()
         super().closeEvent(e)
 
+
+
+
+
+
+
+
 # ===================== main =====================
 if __name__ == "__main__":
-    import sys
+    """
+    当该脚本被直接运行时，Python 会执行此部分。
+    如果脚本被导入为模块，这部分代码不会执行。
+    """
+
+    import sys  # 导入 sys 模块，用于获取命令行参数和退出程序
+
+    # 创建 Qt 应用程序对象
+    # QApplication 是每个 Qt GUI 程序的核心，负责管理应用级别的事件循环和资源
+    # sys.argv 是命令行参数列表，Qt 可能使用它解析启动选项
     app = QApplication(sys.argv)
-    # 创建左侧停靠的AppBar窗口
+
+    # 创建一个左侧停靠的 AppBar 窗口实例
+    # edge=ABEdge.LEFT 指定停靠在屏幕左侧
+    # DebugAppBar 是我们自定义的 AppBar 类，封装了注册、停靠和DPI处理
     bar = DebugAppBar(edge=ABEdge.LEFT)
+
+    # 显示窗口
+    # Qt 的窗口默认是隐藏的，必须调用 show() 才会显示在屏幕上
     bar.show()
+
+    # 启动 Qt 事件循环
+    # exec() 方法会阻塞，直到程序退出
+    # sys.exit() 用来返回应用程序退出状态给操作系统（通常0表示正常退出）
     sys.exit(app.exec())

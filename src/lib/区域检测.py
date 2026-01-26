@@ -70,9 +70,7 @@ if __name__ == "__main__":
     try:
         while True:
             # 这个调用会阻塞，直到状态变化
-            status = shubiao_in_quyu(0, 0, 500, 300)
-            
-            if status:
+            if shubiao_in_quyu(0, 0, 500, 300):
                 print("✅ 鼠标在指定区域内")
             else:
                 print("❌ 鼠标不在指定区域内")

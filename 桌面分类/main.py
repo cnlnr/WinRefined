@@ -1,111 +1,162 @@
 import sys
-import ctypes
 from functools import partial
-from PySide6.QtWidgets import QApplication, QWidget, QHBoxLayout, QPushButton, QFrame, QVBoxLayout, QSizePolicy
+
+from PySide6.QtWidgets import (
+    QApplication, QWidget, QHBoxLayout,
+    QPushButton, QFrame, QVBoxLayout
+)
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QCursor
-from desktop_dirs import get_dirs
+
+from desktop_dirs import get_dirs, find_index_matching_current_dir
+from switch_desktop import switch_desktop_path
+
 
 class DesktopWidget(QWidget):
     def __init__(self, entries):
         super().__init__()
-        # 窗口样式
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)  # 不显示任务栏 / Alt+Tab
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
 
-        # 背景
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0,0,0,0)
-        self.setLayout(main_layout)
+        # 不进任务栏 / 不进 Win+Tab
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        self.entries = entries
+        self.buttons = []
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
         self.background = QWidget()
-        self.background.setStyleSheet("background-color: rgba(50,50,50,220); border-radius: 15px;")
+        self.background.setStyleSheet("""
+            background-color: rgba(50, 50, 50, 220);
+            border-radius: 15px;
+        """)
         main_layout.addWidget(self.background)
 
-        layout = QHBoxLayout()
-        layout.setContentsMargins(5,5,5,5)
+        layout = QHBoxLayout(self.background)
+        layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
-        self.background.setLayout(layout)
 
-        # 左侧拖动条
+        # 拖动条
         self.drag_frame = QFrame()
         self.drag_frame.setFixedWidth(25)
-        self.drag_frame.setStyleSheet("background-color: rgba(80,80,80,200); border-radius:10px;")
+        self.drag_frame.setStyleSheet("""
+            background-color: rgba(80, 80, 80, 200);
+            border-radius: 10px;
+        """)
         self.drag_frame.setCursor(QCursor(Qt.SizeAllCursor))
         layout.addWidget(self.drag_frame)
 
-        # 按钮
         button_height = 35
-        self.resize(450, button_height+10)
-        self.buttons = []
+
         for entry in entries:
             btn = QPushButton(entry["name"])
             btn.setFixedHeight(button_height)
-            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             btn.setCheckable(True)
+
             btn.setStyleSheet("""
-                QPushButton {background-color: rgba(80,80,80,220); color:white; border-radius:10px; border:none; font-size:14px; padding-left:10px; padding-right:10px;}
-                QPushButton:hover {background-color: rgba(100,100,100,220);}
-                QPushButton:checked {background-color: rgba(0,200,100,220);}
+                QPushButton {
+                    background-color: rgba(80, 80, 80, 220);
+                    color: white;
+                    border-radius: 10px;
+                    border: none;
+                    font-size: 14px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
+                QPushButton:hover {
+                    background-color: rgba(100, 100, 100, 220);
+                }
+                QPushButton:checked {
+                    background-color: rgba(60, 160, 90, 230);
+                }
             """)
+
             layout.addWidget(btn)
             self.buttons.append(btn)
-            btn.clicked.connect(partial(self.on_button_click, entry["path"], btn))
 
-        self.move(300,10)
+            btn.clicked.connect(
+                partial(self.on_button_clicked, entry["path"], btn)
+            )
+
+        self.move(300, 10)
+
         self._drag_active = False
         self._drag_position = QPoint()
 
-        # 设置桌面上层
-        self._set_desktop_top_layer()
+    # ---------------- 点击按钮 ----------------
 
-    def on_button_click(self, path, button):
+    def on_button_clicked(self, path: str, btn: QPushButton):
+        success = switch_desktop_path(path)
+
+        if not success:
+            # 切换失败：恢复按钮状态
+            btn.setChecked(False)
+            return
+
+        # 切换成功：只保留当前按钮高亮
         for b in self.buttons:
-            if b != button:
+            if b is not btn:
                 b.setChecked(False)
-        button.setChecked(True)
-        print(path)
 
-    def _set_desktop_top_layer(self):
-        """独立顶层窗口，保证稳定显示"""
-        user32 = ctypes.windll.user32
-        hwnd = int(self.winId())
+    # ---------------- 拖动（限制屏幕内） ----------------
 
-        SWP_NOMOVE = 0x0002
-        SWP_NOSIZE = 0x0001
-        SWP_NOACTIVATE = 0x0010
-        HWND_TOPMOST = -1
-
-        user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
-
-    # 拖动逻辑 + 屏幕边界限制
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and event.position().x() <= self.drag_frame.width():
+        if (
+            event.button() == Qt.LeftButton
+            and event.position().x() <= self.drag_frame.width()
+        ):
             self._drag_active = True
-            self._drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self._drag_position = (
+                event.globalPosition().toPoint()
+                - self.frameGeometry().topLeft()
+            )
             event.accept()
 
     def mouseMoveEvent(self, event):
-        if Qt.LeftButton and self._drag_active:
-            new_pos = event.globalPosition().toPoint() - self._drag_position
-            screen = QApplication.primaryScreen()
-            if screen:
-                geom = screen.availableGeometry()
-                x = max(geom.left(), min(new_pos.x(), geom.right()-self.width()))
-                y = max(geom.top(), min(new_pos.y(), geom.bottom()-self.height()))
-                new_pos = QPoint(x,y)
-            self.move(new_pos)
+        if self._drag_active:
+            screen = QApplication.primaryScreen().availableGeometry()
+            pos = event.globalPosition().toPoint() - self._drag_position
+
+            x = max(screen.left(), min(pos.x(), screen.right() - self.width()))
+            y = max(screen.top(), min(pos.y(), screen.bottom() - self.height()))
+
+            self.move(x, y)
             event.accept()
 
     def mouseReleaseEvent(self, event):
         self._drag_active = False
 
 
+# ----------------------------
+# 程序入口
+# ----------------------------
+from PySide6.QtWidgets import QMessageBox
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    dir_list = get_dirs()
-    widget = DesktopWidget(dir_list)
+
+    entries = get_dirs()
+
+    # ❗ 新增功能：桌面没有任何可用目录
+    if not entries:
+        QMessageBox.information(
+            None,
+            "提示",
+            "请在 用户\\桌面 目录创建你要分类的文件夹，也可以是快捷方式"
+        )
+        sys.exit(0)
+
+    index = find_index_matching_current_dir(entries)
+
+    # 找不到当前桌面 → 不显示组件
+    if index is None:
+        sys.exit(0)
+
+    widget = DesktopWidget(entries)
+
+    # 初始高亮当前桌面
+    widget.buttons[index].setChecked(True)
+
     widget.show()
     sys.exit(app.exec())

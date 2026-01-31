@@ -14,7 +14,7 @@ def get_desktop_target_path():
     desktop_path = wsh.SpecialFolders("Desktop")
 
     if not desktop_path:
-        raise RuntimeError("无法获取系统桌面路径")
+        desktop_path = os.path.join(os.path.expanduser("~"), "桌面")
 
     return desktop_path
 

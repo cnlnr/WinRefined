@@ -131,14 +131,14 @@ class DesktopWidget(QWidget):
 # ----------------------------
 # 程序入口
 # ----------------------------
-from PySide6.QtWidgets import QMessageBox
-
 if __name__ == "__main__":
+
+    from PySide6.QtWidgets import QMessageBox
     app = QApplication(sys.argv)
 
     entries = get_dirs()
 
-    # ❗ 新增功能：桌面没有任何可用目录
+    # 桌面没有任何可用目录 → 弹窗提示 + 退出
     if not entries:
         QMessageBox.information(
             None,
@@ -147,16 +147,15 @@ if __name__ == "__main__":
         )
         sys.exit(0)
 
-    index = find_index_matching_current_dir(entries)
-
-    # 找不到当前桌面 → 不显示组件
-    if index is None:
-        sys.exit(0)
-
     widget = DesktopWidget(entries)
 
-    # 初始高亮当前桌面
-    widget.buttons[index].setChecked(True)
+    # 尝试获取当前桌面对应按钮索引
+    index = find_index_matching_current_dir(entries)
+
+    if index is not None and 0 <= index < len(widget.buttons):
+        # 初始高亮
+        widget.buttons[index].setChecked(True)
+    # 否则不高亮，组件仍显示
 
     widget.show()
     sys.exit(app.exec())

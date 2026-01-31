@@ -1,31 +1,36 @@
 import os
 import win32com.client
 
+
+def get_desktop_target_path():
+    """
+    获取当前系统桌面真实指向的目录
+    （支持语言差异 / OneDrive / 重定向）
+
+    返回:
+        str: 桌面真实路径
+    """
+    wsh = win32com.client.Dispatch("WScript.Shell")
+    desktop_path = wsh.SpecialFolders("Desktop")
+
+    if not desktop_path:
+        raise RuntimeError("无法获取系统桌面路径")
+
+    return desktop_path
+
+
 def get_dirs(path=None):
     """
     获取指定路径下的所有文件夹和指向文件夹的快捷方式（Windows）。
-    
-    参数:
-        path: 要扫描的目录路径，默认 None 表示用户桌面
-
-    返回:
-        列表，每个元素是字典：
-        {
-            "name": 文件夹名或快捷方式名（去掉 .lnk）,
-            "path": 对应的实际路径
-        }
     """
     if path is None:
         path = os.path.join(os.path.expanduser("~"), "桌面")
+
     os.makedirs(path, exist_ok=True)
 
     dirs = []
 
-    # 如果 win32com 不可用，则只能扫描普通文件夹
-    if win32com:
-        shell = win32com.client.Dispatch("WScript.Shell")
-    else:
-        shell = None
+    shell = win32com.client.Dispatch("WScript.Shell")
 
     for item in os.listdir(path):
         full_path = os.path.join(path, item)
@@ -35,7 +40,7 @@ def get_dirs(path=None):
             dirs.append({"name": item, "path": full_path})
 
         # 快捷方式
-        elif shell and item.lower().endswith(".lnk"):
+        elif item.lower().endswith(".lnk"):
             try:
                 shortcut = shell.CreateShortcut(full_path)
                 target = shortcut.Targetpath
@@ -47,15 +52,33 @@ def get_dirs(path=None):
 
     return dirs
 
-# 直接运行库文件时打印结果
+
+def find_index_matching_current_dir(dirs_list):
+    """
+    使用“桌面真实路径”对比列表中的目录，
+    返回第一个匹配的索引
+    """
+    desktop_path = get_desktop_target_path()
+    desktop_path = os.path.abspath(desktop_path)
+
+    for i, entry in enumerate(dirs_list):
+        if os.path.abspath(entry["path"]) == desktop_path:
+            return i
+
+    return None
+
+
+# ======================
+# 测试
+# ======================
 if __name__ == "__main__":
+    print("桌面真实路径:", get_desktop_target_path())
+    print("=" * 50)
+
     result = get_dirs()
     for entry in result:
         print(f"名称: {entry['name']}, 路径: {entry['path']}")
-    
-    print(50 * "=")
-    print("C盘根目录下的文件夹：")
-    result = get_dirs(r"C:\\")
-    for entry in result:
-        print(f"名称: {entry['name']}, 路径: {entry['path']}")
 
+    print("=" * 50)
+    idx = find_index_matching_current_dir(result)
+    print("桌面在列表中的索引:", idx)

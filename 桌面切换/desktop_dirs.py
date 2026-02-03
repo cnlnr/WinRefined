@@ -13,9 +13,6 @@ def get_desktop_target_path():
     wsh = win32com.client.Dispatch("WScript.Shell")
     desktop_path = wsh.SpecialFolders("Desktop")
 
-    if not desktop_path:
-        desktop_path = os.path.join(os.path.expanduser("~"), "桌面")
-
     return desktop_path
 
 
@@ -81,4 +78,4 @@ if __name__ == "__main__":
 
     print("=" * 50)
     idx = find_index_matching_current_dir(result)
-    print("桌面在列表中的索引:", idx)
+    print("桌面在列表中的索引:", idx)  # 后来的开发者注意是从0开始计数

@@ -1,7 +1,7 @@
 import ctypes
 import os
 from ctypes import wintypes
-from refresh_desktop import refresh_desktop  # 你之前封装的函数
+from refresh_desktop import refresh_desktop
 
 # -----------------------------
 # GUID 定义，用于桌面路径修改
@@ -56,6 +56,6 @@ if __name__ == "__main__":
     new_path = r"C:\Users\lqvsy\Desktop"
 
     if switch_desktop_path(new_path):
-        print("✅ 桌面切换完成并刷新，右键新建文件夹可用")
+        print("✅ 桌面切换完成并刷新")
     else:
         print("❌ 桌面切换失败（目录不存在或设置失败）")

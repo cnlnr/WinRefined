@@ -8,7 +8,7 @@
 
 桌面切换器已经开发的差不多了，请在 https://gitee.com/LZY4/Windows-optimization/releases 里下载
 
-如果你想将应用开机自启动，请在文件管理器打开 `shell:startup` 地址将 exe 放在里面
+如果你想将应用开机自启动，请在文件管理器输入 `启动` 地址将 exe 放在里面
 
 ---
 

@@ -1,5 +1,18 @@
 import os
 import win32com.client
+import re
+from natsort import natsorted
+
+PREFIX_RE = re.compile(r'^\d+_')
+
+def strip_prefix_inplace(dirs):
+    """
+    先排序，再去掉 name 中开头的数字_ 前缀
+    """
+    dirs[:] = natsorted(dirs, key=lambda x: x["name"])
+
+    for entry in dirs:
+        entry["name"] = PREFIX_RE.sub("", entry["name"])
 
 
 def get_desktop_target_path():
@@ -46,7 +59,10 @@ def get_dirs(path=None):
                     dirs.append({"name": name_without_ext, "path": target})
             except Exception:
                 continue
-
+    
+    # 排序并去掉数字前缀
+    strip_prefix_inplace(dirs)
+    
     return dirs
 
 

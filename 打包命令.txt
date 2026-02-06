@@ -1,1 +1,1 @@
-pyinstaller --name "桌面切换器" --windowed --onefile --icon "C:\Users\lqvsy\桌面\2_工作\logo.jpg" "C:\Users\lqvsy\桌面\2_工作\Windows-optimization\桌面切换\main.py"
+pyinstaller --name "桌面切换器" --windowed --onefile --icon "C:\Users\lqvsy\桌面\1_Work\logo.jpg" "C:\Users\lqvsy\桌面\1_Work\Windows-optimization\桌面切换\main.py"

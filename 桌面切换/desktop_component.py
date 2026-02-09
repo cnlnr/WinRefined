@@ -2,13 +2,9 @@ import ctypes
 
 user32 = ctypes.windll.user32
 
-GWL_STYLE = -16
-WS_CHILD = 0x40000000
-WS_VISIBLE = 0x10000000
-
-def get_desktop_listview_hwnd():
+def get_desktop_defview_hwnd():
     """
-    获取桌面图标列表窗口的句柄 (SysListView32)
+    获取桌面 SHELLDLL_DefView 窗口的句柄
     返回句柄，找不到返回 None
     """
     defview = None
@@ -22,28 +18,27 @@ def get_desktop_listview_hwnd():
         if defview:
             break
 
-    listview = user32.FindWindowExW(defview, None, "SysListView32", None) if defview else None
-    return listview
+    # 直接返回 SHELLDLL_DefView 句柄，不再查找 SysListView32
+    return defview
 
 def attach_window_to_desktop_only(hwnd):
     """
-    只将指定窗口挂到桌面图标窗口上，不修改窗口样式
+    只将指定窗口挂到桌面 SHELLDLL_DefView 窗口上，不修改窗口样式
     hwnd: 目标窗口句柄
     返回 True/False
     """
     if not hwnd:
         return False
 
-    # 获取桌面图标窗口句柄
-    desktop = get_desktop_listview_hwnd()
+    # 获取桌面 SHELLDLL_DefView 窗口句柄（修改函数调用）
+    desktop = get_desktop_defview_hwnd()
     if not desktop:
         return False
 
-    # 只设置父窗口为桌面图标窗口
+    # 只设置父窗口为 SHELLDLL_DefView 窗口
     user32.SetParent(hwnd, desktop)
 
     return True
-
 
 # -------------------------
 if __name__ == "__main__":

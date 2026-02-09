@@ -125,6 +125,9 @@ if __name__ == "__main__":
     from desktop_dirs import get_dirs, find_index_matching_current_dir
     from desktop_component import attach_window_to_desktop_only
 
+    from desktop_dirs import get_dirs, find_index_matching_current_dir
+    from desktop_component import attach_window_to_desktop_only
+
     app = QApplication(sys.argv)
 
     entries = get_dirs()
@@ -149,10 +152,15 @@ if __name__ == "__main__":
 
     widget.show()
 
-    # 获取 Qt 窗口句柄并挂到桌面
-    hwnd = int(widget.winId())  # Qt 原生窗口句柄
+    hwnd = int(widget.winId())
     if attach_window_to_desktop_only(hwnd):
         print("已挂到桌面 ✅")
+        import ctypes
+        user32 = ctypes.windll.user32
+        # 仅保留必需的常量和核心操作
+        ex_style = user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20 直接写值，少定义变量
+        ex_style &= ~0x00080000  # WS_EX_LAYERED = 0x00080000 直接写值，移除该样式
+        user32.SetWindowLongW(hwnd, -20, ex_style)
     else:
         print("挂到桌面失败 ❌")
 

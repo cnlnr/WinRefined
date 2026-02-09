@@ -1,13 +1,11 @@
 import sys
-import ctypes
 from functools import partial
 
 from PySide6.QtWidgets import (
     QApplication, QWidget, QHBoxLayout,
-    QPushButton, QFrame, QVBoxLayout, QMessageBox,
-    QStyleFactory  # 导入样式工厂
+    QPushButton, QFrame, QVBoxLayout, QMessageBox
 )
-from PySide6.QtCore import Qt, QPoint, QTimer
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QCursor
 
 from switch_desktop import switch_desktop_path
@@ -16,11 +14,9 @@ class DesktopWidget(QWidget):
     def __init__(self, entries):
         super().__init__()
 
-        # 兼容的窗口属性设置
+        # 不进任务栏 / 不进 Win+Tab
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setAttribute(Qt.WA_NoSystemBackground, False)
-        self.setAttribute(Qt.WA_PaintOnScreen, False)
+        self.setAttribute(Qt.WA_TranslucentBackground)
 
         self.entries = entries
         self.buttons = []
@@ -28,13 +24,11 @@ class DesktopWidget(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 背景容器
-        self.background = QFrame()
+        # 背景
+        self.background = QWidget()
         self.background.setStyleSheet("""
-            QFrame {
-                background-color: rgba(50, 50, 50, 220);
-                border-radius: 15px;
-            }
+            background-color: rgba(50, 50, 50, 220);
+            border-radius: 15px;
         """)
         main_layout.addWidget(self.background)
 
@@ -46,10 +40,8 @@ class DesktopWidget(QWidget):
         self.drag_frame = QFrame()
         self.drag_frame.setFixedWidth(25)
         self.drag_frame.setStyleSheet("""
-            QFrame {
-                background-color: rgba(80, 80, 80, 200);
-                border-radius: 10px;
-            }
+            background-color: rgba(80, 80, 80, 200);
+            border-radius: 10px;
         """)
         self.drag_frame.setCursor(QCursor(Qt.SizeAllCursor))
         layout.addWidget(self.drag_frame)
@@ -61,30 +53,23 @@ class DesktopWidget(QWidget):
             btn = QPushButton(entry["name"])
             btn.setFixedHeight(button_height)
             btn.setCheckable(True)
-            # 简化且高优先级的样式表
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: rgb(80, 80, 80);
+                    background-color: rgba(80, 80, 80, 220);
                     color: white;
                     border-radius: 10px;
                     border: none;
                     font-size: 14px;
                     padding-left: 10px;
                     padding-right: 10px;
-                    opacity: 0.85;
                 }
                 QPushButton:hover {
-                    background-color: rgb(100, 100, 100);
-                    opacity: 0.9;
+                    background-color: rgba(100, 100, 100, 220);
                 }
                 QPushButton:checked {
-                    background-color: rgb(60, 160, 90);
-                    opacity: 0.9;
+                    background-color: rgba(60, 160, 90, 230);
                 }
             """)
-            # 强制使用Fusion样式，避免系统干扰
-            btn.setStyle(QStyleFactory.create("Fusion"))
-            btn.setAttribute(Qt.WA_StyledBackground, True)
             layout.addWidget(btn)
             self.buttons.append(btn)
             btn.clicked.connect(partial(self.on_button_clicked, entry["path"], btn))
@@ -101,25 +86,13 @@ class DesktopWidget(QWidget):
         success = switch_desktop_path(path)
 
         if not success:
+            # 切换失败，恢复状态
             btn.setChecked(False)
             return
 
-        # 安全设置按钮选中状态
+        # 切换成功，保持当前按钮选中，其他按钮取消
         for b in self.buttons:
-            b.blockSignals(True)
             b.setChecked(b is btn)
-            b.blockSignals(False)
-        
-        # 延迟刷新确保状态生效
-        QTimer.singleShot(5, self.refresh_ui)
-
-    # ---------------- 界面刷新 ----------------
-    def refresh_ui(self):
-        # 只刷新按钮和背景，避免触发系统API错误
-        for btn in self.buttons:
-            btn.update()
-        self.background.update()
-        self.update()
 
     # ---------------- 拖动 ----------------
     def mousePressEvent(self, event):
@@ -136,6 +109,7 @@ class DesktopWidget(QWidget):
             screen = QApplication.primaryScreen().availableGeometry()
             pos = event.globalPosition().toPoint() - self._drag_position
 
+            # 限制在屏幕内
             x = max(screen.left(), min(pos.x(), screen.right() - self.width()))
             y = max(screen.top(), min(pos.y(), screen.bottom() - self.height()))
 
@@ -151,13 +125,11 @@ if __name__ == "__main__":
     from desktop_dirs import get_dirs, find_index_matching_current_dir
     from desktop_component import attach_window_to_desktop_only
 
-    # 全局设置（仅保留必要属性）
     app = QApplication(sys.argv)
-    app.setStyle(QStyleFactory.create("Fusion"))  # 强制Fusion样式
-    app.setAttribute(Qt.AA_UseSoftwareOpenGL)     # 软件渲染避免硬件冲突
 
     entries = get_dirs()
 
+    # 桌面没有任何可用目录 → 弹窗提示 + 退出
     if not entries:
         QMessageBox.information(
             None,
@@ -168,19 +140,21 @@ if __name__ == "__main__":
 
     widget = DesktopWidget(entries)
 
-    # 初始选中对应按钮
+    # 获取当前桌面对应按钮索引
     index = find_index_matching_current_dir(entries)
     if index is not None and 0 <= index < len(widget.buttons):
+        # 初始高亮
         widget.buttons[index].setChecked(True)
-        widget.refresh_ui()
+    # 否则不高亮，但组件仍显示
 
     widget.show()
 
-    # 获取句柄并挂载到桌面
-    hwnd = int(widget.winId())
+    # 获取 Qt 窗口句柄并挂到桌面
+    hwnd = int(widget.winId())  # Qt 原生窗口句柄
     if attach_window_to_desktop_only(hwnd):
         print("已挂到桌面 ✅")
         # 修复窗口扩展样式，解决UpdateLayeredWindowIndirect错误
+        import ctypes
         user32 = ctypes.windll.user32
         GWL_EXSTYLE = -20
         WS_EX_TRANSPARENT = 0x00000020
@@ -192,8 +166,6 @@ if __name__ == "__main__":
         ex_style = ex_style & ~(WS_EX_LAYERED | WS_EX_TRANSPARENT) | WS_EX_COMPOSITED
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style)
         
-        # 挂载后刷新界面
-        widget.refresh_ui()
     else:
         print("挂到桌面失败 ❌")
 

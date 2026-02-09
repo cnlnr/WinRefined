@@ -123,7 +123,7 @@ class DesktopWidget(QWidget):
 # ---------------------------- 程序入口 ----------------------------
 if __name__ == "__main__":
     from desktop_dirs import get_dirs, find_index_matching_current_dir
-    from desktop_component import attach_window_to_desktop_only
+    from desktop_component import fix_qt_window_style
 
     app = QApplication(sys.argv)
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     # 获取 Qt 窗口句柄并挂到桌面
     hwnd = int(widget.winId())  # Qt 原生窗口句柄
-    if attach_window_to_desktop_only(hwnd):
+    if fix_qt_window_style(hwnd):
         print("已挂到桌面 ✅")
     else:
         print("挂到桌面失败 ❌")

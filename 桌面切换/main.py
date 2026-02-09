@@ -8,9 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QCursor
 
-from desktop_dirs import get_dirs, find_index_matching_current_dir
 from switch_desktop import switch_desktop_path
-
 
 class DesktopWidget(QWidget):
     def __init__(self, entries):
@@ -124,6 +122,9 @@ class DesktopWidget(QWidget):
 
 # ---------------------------- 程序入口 ----------------------------
 if __name__ == "__main__":
+    from desktop_dirs import get_dirs, find_index_matching_current_dir
+    from desktop_component import attach_window_to_desktop_only
+
     app = QApplication(sys.argv)
 
     entries = get_dirs()
@@ -147,4 +148,12 @@ if __name__ == "__main__":
     # 否则不高亮，但组件仍显示
 
     widget.show()
+
+    # 获取 Qt 窗口句柄并挂到桌面
+    hwnd = int(widget.winId())  # Qt 原生窗口句柄
+    if attach_window_to_desktop_only(hwnd):
+        print("已挂到桌面 ✅")
+    else:
+        print("挂到桌面失败 ❌")
+
     sys.exit(app.exec())

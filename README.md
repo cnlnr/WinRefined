@@ -1,5 +1,4 @@
-# Windows-optimization
-
+# Windows-optimization [![star](https://gitee.com/LZY4/Windows-optimization/badge/star.svg?theme=dark)](https://gitee.com/LZY4/Windows-optimization/stargazers) [![GitHub](https://img.shields.io/github/stars/cnlnr/Windows-optimization)](https://github.com/cnlnr/Windows-optimization)
 此项目专门用于 Windows 系统的优化
 
 项目还在完善中

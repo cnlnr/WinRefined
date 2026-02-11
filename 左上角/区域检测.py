@@ -1,5 +1,4 @@
 import ctypes
-from ctypes import wintypes
 import time
 
 # 导入Windows API函数

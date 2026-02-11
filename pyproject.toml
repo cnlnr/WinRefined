@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Windows-optimization"
-version = "0.0.1"  # ✅ 版本号必须有，已经正确
-dependencies = ["keyboard", "PySide6"]  # ✅ 只放 Python 依赖
+version = "0.0.1"
+dependencies = ["keyboard", "PySide6","pynput", "natsort", "pywin32"]
+classifiers = ["Operating System :: Microsoft :: Windows"]
 
 [tool.setuptools.packages.find]
-where = ["src/lib"]
+where = ["."]

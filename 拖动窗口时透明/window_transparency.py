@@ -1,99 +1,152 @@
 import ctypes
 import time
+import threading
 
-# Windows API 常量
 GWL_EXSTYLE = -20
 WS_EX_LAYERED = 0x00080000
 LWA_ALPHA = 0x00000002
 
-# 加载 user32.dll
+user32 = ctypes.windll.user32
+
+
+import ctypes
+import time
+import threading
+
+# ===== Windows API 常量 =====
+GWL_EXSTYLE = -20
+WS_EX_LAYERED = 0x00080000
+LWA_ALPHA = 0x00000002
+
 user32 = ctypes.windll.user32
 
 
 class WindowTransparency:
     """
     窗口透明度控制器
-    
-    Args:
-        hwnd: 窗口句柄
-        alpha: 默认透明度 0-255，默认200
-        interval: 动画间隔（秒），0为无动画直接设置，默认0
+
+    interval 语义：
+        每改变 1 个 alpha 值所等待的时间（秒）
+        例如 interval=0.005：
+            255 -> 254 -> 253 ... 每步间隔 0.005 秒
     """
-    
-    def __init__(self, hwnd: int, alpha: int = 200, interval: float = 0.002):
+
+    def __init__(self, hwnd: int, alpha: int = 200, interval: float = 0.005):
+        # === 被控制窗口句柄 ===
         self.hwnd = hwnd
-        self.alpha = alpha          # 默认透明度
-        self.interval = interval    # 动画间隔（秒）
-        self._current_alpha = 255   # 当前透明度
-        self._original_alpha = 255  # 记录原始透明度
-        
+
+        # === 默认目标透明度（配置项） ===
+        self.alpha = alpha
+
+        # === 每 1 个 alpha 的过渡间隔 ===
+        self.interval = interval
+
+        # === 当前透明度（唯一真实状态） ===
+        self._current_alpha = 255
+
+        # === 动画线程与中断信号 ===
+        self._anim_thread = None
+        self._stop_flag = threading.Event()
+
+        # === 初始化窗口样式 ===
         self._ensure_layered()
-    
-    def _ensure_layered(self) -> None:
-        """确保窗口有 WS_EX_LAYERED 样式"""
-        ex_style = user32.GetWindowLongW(self.hwnd, GWL_EXSTYLE)
-        if not (ex_style & WS_EX_LAYERED):
-            user32.SetWindowLongW(self.hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED)
-    
-    def _animate(self, start: int, end: int, interval: float = None) -> None:
-        """内部动画方法"""
-        iv = interval if interval is not None else self.interval
-        
-        # 无动画，直接设置
-        if iv <= 0:
-            user32.SetLayeredWindowAttributes(self.hwnd, 0, end, LWA_ALPHA)
-            self._current_alpha = end
+
+    def _ensure_layered(self):
+        """
+        确保窗口具有 WS_EX_LAYERED 样式
+        否则透明度 API 不生效
+        """
+        ex = user32.GetWindowLongW(self.hwnd, GWL_EXSTYLE)
+        if not (ex & WS_EX_LAYERED):
+            user32.SetWindowLongW(self.hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED)
+
+    def _set_alpha(self, alpha: int):
+        """
+        立即设置窗口透明度（无动画）
+        """
+        user32.SetLayeredWindowAttributes(
+            self.hwnd, 0, int(alpha), LWA_ALPHA
+        )
+        self._current_alpha = int(alpha)
+
+    def _animate(self, target: int):
+        """
+        动画执行体（运行在独立线程）
+
+        从当前透明度逐步过渡到 target
+        每次变化 1 个 alpha，sleep interval
+        """
+        start = self._current_alpha
+        diff = target - start
+
+        if diff == 0:
             return
-        
-        # 计算步数：每步变化至少1，确保平滑
-        diff = abs(end - start)
-        steps = max(diff, 1)  # 至少1步
-        
-        for i in range(1, steps + 1):
-            progress = i / steps
-            current = int(start + (end - start) * progress)
-            user32.SetLayeredWindowAttributes(self.hwnd, 0, current, LWA_ALPHA)
-            time.sleep(iv)
-        
-        self._current_alpha = end
-    
-    def fade_to(self, target_alpha: int = None, interval: float = None) -> None:
+
+        step = 1 if diff > 0 else -1
+
+        for alpha in range(start + step, target + step, step):
+            if self._stop_flag.is_set():
+                return
+
+            self._set_alpha(alpha)
+            time.sleep(self.interval)
+
+        # 保证最终值精确
+        self._set_alpha(target)
+
+    def _start_animation(self, target: int):
+        """
+        动画调度器
+
+        - 中断旧动画
+        - 启动新动画
+        - 保证只有一个动画在运行
+        """
+        self._stop_flag.set()
+
+        if self._anim_thread and self._anim_thread.is_alive():
+            self._anim_thread.join()
+
+        self._stop_flag.clear()
+        self._anim_thread = threading.Thread(
+            target=self._animate,
+            args=(int(target),),
+            daemon=True
+        )
+        self._anim_thread.start()
+
+    # ===== 对外 API =====
+
+    def fade_to(self, target_alpha: int = None):
         """
         渐变到指定透明度
-        
-        Args:
-            target_alpha: 目标透明度，默认使用初始化时的alpha
-            interval: 动画间隔，默认使用初始化时的interval（0为无动画）
+        未指定时使用默认 alpha
         """
-        target = target_alpha if target_alpha is not None else self.alpha
-        
-        # 首次设置透明度时记录原始值
-        if self._original_alpha == 255 and self._current_alpha == 255:
-            self._original_alpha = 255
-        
-        self._animate(self._current_alpha, target, interval)
-    
-    def fade_in(self, interval: float = None) -> None:
-        """淡入（透明->不透明）"""
-        self._animate(self._current_alpha, 255, interval)
-    
-    def fade_out(self, interval: float = None) -> None:
-        """淡出（不透明->透明）"""
-        self._animate(self._current_alpha, 0, interval)
-    
-    def fade_reset(self, interval: float = None) -> None:
-        """渐变回默认透明度"""
-        self._animate(self._current_alpha, self.alpha, interval)
-    
-    def fade_restore(self, interval: float = None) -> None:
-        """渐变恢复原始透明度"""
-        self._animate(self._current_alpha, self._original_alpha, interval)
-    
-    def set_transparent(self, alpha: int = None) -> None:
-        """直接设置透明度（无动画，无视interval）"""
-        target = alpha if alpha is not None else self.alpha
-        user32.SetLayeredWindowAttributes(self.hwnd, 0, target, LWA_ALPHA)
-        self._current_alpha = target
+        self._start_animation(
+            target_alpha if target_alpha is not None else self.alpha
+        )
+
+    def fade_in(self):
+        """
+        渐变到完全不透明（255）
+        """
+        self._start_animation(255)
+
+    def fade_out(self):
+        """
+        渐变到完全透明（0）
+        """
+        self._start_animation(0)
+
+    def set_transparent(self, alpha: int):
+        """
+        立即设置透明度（无动画）
+        会中断当前动画
+        """
+        self._stop_flag.set()
+        self._set_alpha(alpha)
+
+
 
 if __name__ == "__main__":
     import win32gui

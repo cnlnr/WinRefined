@@ -5,7 +5,7 @@ from window_transparency import WindowTransparency
 while True:
     is_start, hwnd = wait_for_move_event()
     if is_start:
-        controller = WindowTransparency(hwnd, alpha=230, interval=0.005)
+        controller = WindowTransparency(hwnd, alpha=230, interval=0.004)
         controller.fade_to()
     else:
         try:

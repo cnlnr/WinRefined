@@ -18,7 +18,7 @@ python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ### 开机自启动
 
-打开文件资源管理器，地址栏输入 `启动` 将启动脚本以及快捷键放到里面
+打开文件资源管理器，地址栏输入 `启动` 将启动脚本以及快捷方式放到里面
 
 ## 反馈
 

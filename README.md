@@ -28,6 +28,10 @@ python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 请声明使用或参考了此项目
 
+## 小群
+
+[![QQ](https://img.shields.io/badge/QQ群-973095862-blue?logo=qq)](https://qm.qq.com/q/Rn7GHbtbuI)
+
 ## 支持
 
 帮忙点个 Star ，或赞赏一些 ❤️

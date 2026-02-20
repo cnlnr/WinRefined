@@ -1,8 +1,8 @@
 # Windows-optimization [![star](https://gitee.com/LZY4/Windows-optimization/badge/star.svg?theme=dark)](https://gitee.com/LZY4/Windows-optimization/stargazers) [![GitHub](https://img.shields.io/github/stars/cnlnr/Windows-optimization)](https://github.com/cnlnr/Windows-optimization)
 
-此项目专门用于 Windows 系统的优化
+此项目专门用于 Windows 系统的优化 [![bilibili-演示](https://img.shields.io/badge/bilibili-演示-FB7299?logo=bilibili&logoColor=00A1D6)](https://b23.tv/fNLKMBE)
 
-## 安装
+## 安装 
 
 本项目没有打包 exe 需要使用 [Python](https://www.python.org/) 才能运行
 

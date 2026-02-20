@@ -1,6 +1,6 @@
 # Windows-optimization [![star](https://gitee.com/LZY4/Windows-optimization/badge/star.svg?theme=dark)](https://gitee.com/LZY4/Windows-optimization/stargazers) [![GitHub](https://img.shields.io/github/stars/cnlnr/Windows-optimization)](https://github.com/cnlnr/Windows-optimization)
 
-此项目专门用于 <img src="https://blogs.windows.com/wp-content/uploads/2022/09/cropped-Windows11IconTransparent512.png" width="18"> Windows 系统的优化 [![bilibili-演示](https://img.shields.io/badge/bilibili-演示-FB7299?logo=bilibili&logoColor=00A1D6)](https://b23.tv/fNLKMBE)
+此项目专门用于 <img src="https://blogs.windows.com/wp-content/uploads/2022/09/cropped-Windows11IconTransparent512.png" width="13"> Windows 系统的优化 [![bilibili-演示](https://img.shields.io/badge/bilibili-演示-FB7299?logo=bilibili&logoColor=00A1D6)](https://b23.tv/fNLKMBE)
 
 ## 安装 
 

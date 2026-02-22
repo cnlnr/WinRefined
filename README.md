@@ -36,6 +36,8 @@ python -m pip install -e . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 帮忙点个 Star ，或赞赏一些 ❤️
 
+[![PayPal](https://www.paypalobjects.com/webstatic/mktg/logo/AM_mc_vs_dc_ae.jpg)](https://www.paypal.com/paypalme/liuzhongyi866)
+
 ```test
  █▀▀▀▀▀▀▀█▀██▀███▀▀██▀▀▀▀▀█▀█▀██▀▀▀▀▀▀▀█     
  █ █▀▀▀█ █  ▄█ ██▀▀█  █ ▀▀▄  ███ █▀▀▀█ █     

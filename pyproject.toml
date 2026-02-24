@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Windows-optimization"
 version = "0.0.1"
-dependencies = ["keyboard", "PySide6","pynput", "natsort", "pywin32"]
+dependencies = ["keyboard", "PySide6","pynput", "natsort", "pywin32", "pywinauto"]
 classifiers = ["Operating System :: Microsoft :: Windows"]
 
 [tool.setuptools.packages.find]

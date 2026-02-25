@@ -84,7 +84,6 @@ def is_mouse_pressed() -> bool:
 
 if __name__ == "__main__":
     print("开始检测鼠标大幅移动...")
-    print("提示：采样间隔0.01s，检测时长0.2s，可根据需要调整参数")
     while True:
         result = wait_for_large_movement()
         print("触发方向:", result)

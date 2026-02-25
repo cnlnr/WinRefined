@@ -14,9 +14,9 @@ while True:
         elif keyboard.is_pressed('alt'):
             keyboard.press_and_release('tab')
         else:
-            # keyboard.press_and_release('win + 1')
+            keyboard.press_and_release('win + 1')
 
             # 模拟gnome（win + tab）打开任务视图
-            keyboard.press_and_release('win + tab')
+            # keyboard.press_and_release('win + tab')
 
 

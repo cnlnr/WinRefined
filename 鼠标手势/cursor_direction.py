@@ -47,7 +47,7 @@ def calculate_cumulative_movement(sample_interval=0.01, duration=0.2):
     return main_direction, total_distance
 
 def wait_for_large_movement(up_th=400, down_th=400, left_th=500, right_th=550, 
-                           sample_interval=0.002, duration=0.03):
+                           sample_interval=0.002, duration=0.02):
     """
     循环检测鼠标累计移动，超过阈值时返回方向
     解决了"移动后回原点"导致的误判问题

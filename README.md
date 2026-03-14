@@ -1,5 +1,7 @@
 # Windows12 [![star](https://gitee.com/LZY4/Windows12/badge/star.svg?theme=dark)](https://gitee.com/LZY4/Windows-optimization/stargazers) [![GitHub](https://img.shields.io/github/stars/cnlnr/Windows-optimization)](https://github.com/cnlnr/Windows12)
 
+此项目已停止开发，迁移到 https://github.com/cnlnr/Next-Windows
+
 此项目专门用于 <img src="https://blogs.windows.com/wp-content/uploads/2022/09/cropped-Windows11IconTransparent512.png" width="13"> Windows11 系统的优化 [![bilibili-演示](https://img.shields.io/badge/bilibili-演示-FB7299?logo=bilibili&logoColor=00A1D6)](https://b23.tv/fNLKMBE)
 
 ## 安装 
